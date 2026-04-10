@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('wallets', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('user_id')->constrained();
+            $table->foreignUuid('user_id')->constrained()->cascadeOnDelete();
             $table->string('currency')->default('NGN');
             $table->string('symbol')->nullable();
             $table->decimal('balance', 20, 8)->default(0);
