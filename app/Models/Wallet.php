@@ -3,14 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 
-#[Fillable(['user_id', 'currency', 'balance', 'ledger_balance', 'is_active', 'version',])]
+#[Fillable(['user_id', 'currency', 'balance', 'ledger_balance', 'is_active'])]
 class Wallet extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, HasUuids;
 
     protected function casts(): array
     {
