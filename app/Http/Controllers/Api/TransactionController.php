@@ -31,6 +31,12 @@ class TransactionController extends Controller
         }
 
         $data = $validator->validated();
+
+        // Pull idempotency key from header (standard pattern)
+        $idempotencyKey = $request->header('Idempotency-Key');
+        if ($idempotencyKey) {
+            $data['idempotency_key'] = $idempotencyKey;
+        }
  
         $data['channel'] = 'api';
  
