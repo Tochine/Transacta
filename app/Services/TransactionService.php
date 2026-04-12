@@ -45,8 +45,7 @@ class TransactionService
             $transaction = Transaction::create([
                 'user_id'         => $user->id,
                 'wallet_id'       => $updatedWallet->id,
-                'reference'       => $data['reference'] ?? Transaction::generateReference(),
-                'idempotency_key' => $data['idempotency_key'] ?? null,
+                'reference'       => $ref,
                 'type'            => $data['type'],
                 'status'          => 'completed',
                 'amount'          => $data['amount'],
