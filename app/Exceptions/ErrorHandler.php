@@ -4,11 +4,13 @@ namespace App\Exceptions;
 
 use Exception;
 
-class WalletExceptionHandler extends Exception
+class ErrorHandler extends Exception
 {
+    public $errorType;
     public function __construct($message, $error = 'error', $code = 0)
     {
-        parent::__construct($message, $error, $code);
+        $this->errorType = $error;
+        parent::__construct($message, $code);
     }
 
     /**
@@ -20,7 +22,7 @@ class WalletExceptionHandler extends Exception
     public function render($request)
     {
         $error = [
-            'error' => $error,
+            'error' => $this->errorType,
             'code' => $this->code,
             'message' => $this->getMessage(),
         ];

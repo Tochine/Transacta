@@ -6,7 +6,7 @@ use App\Models\User;
 use App\Models\Wallet;
 use Illuminate\Support\Facades\DB;
 use App\Helpers\MoneyMath;
-use App\Exceptions\WalletExceptionHandler;
+use App\Exceptions\ErrorHandler;
 
 class WalletService
 {
@@ -33,7 +33,7 @@ class WalletService
                 ->first();
  
             if (! $locked) {
-                throw new WalletExceptionHandler("Your {$wallet->currency} wallet not found or inactive.", "not found", 404);
+                throw new ErrorHandler("Your {$wallet->currency} wallet not found or inactive.", "not found", 404);
             }
 
             $balance = MoneyMath::of($locked->balance);
@@ -41,7 +41,7 @@ class WalletService
  
             if ($type === 'debit') {
                 if ($balance->isLessThan($delta)) {
-                    throw new WalletExceptionHandler(
+                    throw new ErrorHandler(
                         "Insufficient balance. Available: {$balance->toDecimal()}, Required: {$delta->toDecimal()}", "insufficient-fund", 402
                     );
                 }
