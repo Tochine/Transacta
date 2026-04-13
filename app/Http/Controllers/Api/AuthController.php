@@ -58,4 +58,65 @@ class AuthController extends Controller
             ],
         ], 201);
     }
+
+    public function login(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+           'email'    => ['required', 'email'],
+            'password' => ['required', 'string'], 
+        ]);
+
+        if($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        $data = $validator->validated();
+ 
+        if (! Auth::attempt($data)) {
+            throw ValidationException::withMessages([
+                'email' => ['The provided credentials are incorrect.'],
+            ]);
+        }
+ 
+        $user = Auth::user();
+ 
+        if (! $user->is_active) {
+            Auth::logout();
+ 
+            return response()->json(['message' => 'Account is disabled. Contact support.'], 403);
+        }
+ 
+        $user->update(['last_login_at' => now()]);
+ 
+        // Revoke previous tokens for this device (single session enforcement)
+        $user->tokens()->where('name', 'auth_token')->delete();
+        $token = $user->createToken('auth_token', ['*'], now()->addDays(30))->plainTextToken;
+ 
+ 
+        return response()->json([
+            'message' => 'Login successful.',
+            'data'    => [
+                'user'  => $user->only(['id', 'name', 'email', 'role', 'last_login_at']),
+                'token' => $token,
+            ],
+        ]);
+    }
+
+    public function logout(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $request->user()->currentAccessToken()->delete();
+ 
+        return response()->json(['message' => 'Logged out successfully.']);
+    }
+ 
+    public function me(Request $request): JsonResponse
+    {
+        $user = $request->user()->load('wallet');
+ 
+        return response()->json(['data' => $user]);
+    }
 }
