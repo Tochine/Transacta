@@ -40,4 +40,26 @@ class User extends Authenticatable
     {
         return $this->hasMany(Wallet::class);
     }
+
+    // Role helper
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+ 
+    public function isBusiness(): bool
+    {
+        return $this->role === 'business';
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+ 
+    // Scopes
+    public function scopeAdmins($query)
+    {
+        return $query->where('role', 'admin');
+    }
 }

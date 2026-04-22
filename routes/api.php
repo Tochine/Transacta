@@ -18,5 +18,6 @@ Route::prefix('v1')->group(function() {
 
         // Transactions
         Route::post('/transactions', [TransactionController::class, 'store']);
+        Route::get('/transactions', [TransactionController::class, 'index']);
     });
 });

@@ -7,10 +7,46 @@ use Illuminate\Http\Request;
 use App\Services\TransactionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class TransactionController extends Controller
 {
     public function __construct(private TransactionService $transactionService) {}
+    
+     /**
+     * GET /api/transactions
+     * List transactions (admin sees all, business sees own).
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $filters = $request->validate([
+            'type'       => ['nullable', Rule::in(['credit', 'debit'])],
+            'status'     => ['nullable', Rule::in(['pending', 'completed', 'failed', 'reversed'])],
+            'from'       => ['nullable', 'date'],
+            'to'         => ['nullable', 'date', 'after_or_equal:from'],
+            'min_amount' => ['nullable', 'numeric', 'min:0'],
+            'max_amount' => ['nullable', 'numeric', 'min:0'],
+            'reference'  => ['nullable', 'string', 'max:100'],
+            'user_id'    => ['nullable', 'integer', 'exists:users,id'],
+            'per_page'   => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+ 
+        // Non-admins cannot filter by other user's transactions
+        if (! $request->user()->isAdmin()) {
+            unset($filters['user_id']);
+        }
+ 
+        // dd($request->user());
+        $transactions = $this->transactionService->listTransactions(
+            user: $request->user(),
+            filters: $filters,
+            perPage: (int) ($filters['per_page'] ?? 15),
+        );
+ 
+        return response()->json(['data' => $transactions]);
+    }
+    
+    
     public function store(Request $request): JsonResponse
     {
 

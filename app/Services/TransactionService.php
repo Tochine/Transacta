@@ -34,7 +34,7 @@ class TransactionService
             throw new ErrorHandler("indempotency key is missing", "no key", 400);
         }
 
-        $existing = $this->findByIdempotencyKey($data['idempotency_key'], $user->id, $data['amount']);
+        $existing = $this->findByIdempotencyKey($data['idempotency_key'], $user->id, $data['amount'], $data['currency']);
         if ($existing) {
             Log::info('Idempotent transaction replay', [
                 'idempotency_key' => $data['idempotency_key'],
@@ -98,6 +98,26 @@ class TransactionService
 
     function findByIdempotencyKey(string $key, string $id, string $amount, string $currency): bool
     {
-        return Redis::exists("indempotency-key:{$key}:{$id}:{$amount}:{$amount}");
+        return Redis::exists("indempotency-key:{$key}:{$id}:{$amount}:{$amount}:{$currency}");
+    }
+
+    /**
+     * List transactions with filters and pagination.
+     */
+    public function listTransactions(User $user, array $filters = [], int $perPage = 15): LengthAwarePaginator
+    {
+        $query = Transaction::with(['wallet'])
+            ->when(! $user->isAdmin(), fn ($q) => $q->where('user_id', $user->id))
+            ->when($filters['user_id'] ?? null, fn ($q, $uid) => $q->where('user_id', $uid))
+            ->when($filters['type'] ?? null, fn ($q, $type) => $q->where('type', $type))
+            ->when($filters['status'] ?? null, fn ($q, $status) => $q->where('status', $status))
+            ->when($filters['from'] ?? null, fn ($q, $from) => $q->whereDate('created_at', '>=', $from))
+            ->when($filters['to'] ?? null, fn ($q, $to) => $q->whereDate('created_at', '<=', $to))
+            ->when($filters['min_amount'] ?? null, fn ($q, $min) => $q->where('amount', '>=', $min))
+            ->when($filters['max_amount'] ?? null, fn ($q, $max) => $q->where('amount', '<=', $max))
+            ->when($filters['reference'] ?? null, fn ($q, $ref) => $q->where('reference', 'like', "%{$ref}%"))
+            ->latest();
+ 
+        return $query->paginate($perPage);
     }
 }
