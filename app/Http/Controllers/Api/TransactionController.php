@@ -32,11 +32,17 @@ class TransactionController extends Controller
         ]);
  
         // Non-admins cannot filter by other user's transactions
-        if (! $request->user()->isAdmin()) {
-            unset($filters['user_id']);
-        }
+        // if (! $request->user()->isAdmin()) {
+        //     unset($filters['user_id']);
+        // }
+        // $transactions = $this->transactionService->listTransactions(
+        //     user: $request->user(),
+        //     filters: $filters,
+        //     perPage: (int) ($filters['per_page'] ?? 15),
+        // );
  
-        // dd($request->user());
+        // return response()->json(['data' => $transactions]);
+
         $transactions = $this->transactionService->listTransactions(
             user: $request->user(),
             filters: $filters,
@@ -88,5 +94,12 @@ class TransactionController extends Controller
             'message' => 'Transaction created successfully.',
             'data'    => $transaction,
         ], 201);
+    }
+
+    public function show(Request $request, string $id): JsonResponse
+    {
+        $transaction = $this->transactionService->findForUser($id, $request->user());
+ 
+        return response()->json(['data' => $transaction]);
     }
 }

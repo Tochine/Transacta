@@ -120,4 +120,15 @@ class TransactionService
  
         return $query->paginate($perPage);
     }
+
+    // This function is intended to find a specific transaction belonging to the given $user.
+    public function findForUser(string $id, User $user): Transaction
+    {
+        // The 'forUser' scope ensures that only transactions belonging to the provided $user are returned.
+        $query = Transaction::with(['wallet', 'user'])->forUser($user->id);
+ 
+        return $query->findOrFail($id);
+    }
+
+
 }

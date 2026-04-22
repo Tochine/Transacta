@@ -85,4 +85,9 @@ class Transaction extends Model
  
         return $result;
     }
+
+    public function scopeForUser($query, string $userId)
+    {
+        return $query->where('user_id', $userId);
+    }
 }
